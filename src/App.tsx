@@ -34,14 +34,14 @@ export const App: React.FC = () => {
     }
   };
 
-  const getPost = (user: User | null) => {
+  const getPosts = (user: User | null) => {
     if (user?.id) {
       getPostByUserId(user.id.toString());
     }
   };
 
   useEffect(() => {
-    getPost(selectedPerson);
+    getPosts(selectedPerson);
   }, [selectedPerson]);
 
   return (

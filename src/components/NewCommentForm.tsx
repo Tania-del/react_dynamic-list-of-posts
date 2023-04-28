@@ -1,40 +1,75 @@
-import { useState } from "react";
+import { useState } from 'react';
+import { Comment } from '../types/Comment';
+import { Post } from '../types/Post';
+import { client } from '../utils/fetchClient';
 
 const defaultValues = {
-  name: "",
-  email: "",
-  body: "",
+  name: '',
+  email: '',
+  body: '',
 };
 
-export const NewCommentForm: React.FC = () => {
-  const [form, setForm] = useState<{ [key in string]: any }>(defaultValues);
-  const [error, setError] = useState<{ [key in string]: boolean } | null>(null);
-  // const [newComment, setNewComment] = useState<Comment[]>([]);
+type FormType = typeof defaultValues & { [key in string]: string };
+type ErrorType = { [key in string]: boolean };
+interface ISelectedPost {
+  selectedPost: Post | null;
+  handleAddComment: (comment: Comment) => void;
+}
 
-  // const sendComment = async () => {
-  //   const request = await client.post<Comment[]>('/comments', []);
-  //   // console.log(request)
-  //   setNewComment(request);
-  // };
+export const NewCommentForm: React.FC<ISelectedPost> = ({
+  selectedPost,
+  handleAddComment,
+}) => {
+  const [form, setForm] = useState<FormType>(defaultValues);
+  const [error, setError] = useState<ErrorType | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleChange = ({ target: { name, value } }: any) => {
+  const addComment = async () => {
+    setIsLoading(true);
+    const response = await client.post<Comment>('/comments', {
+      ...form,
+      postId: selectedPost?.id,
+    });
+
+    setIsLoading(false);
+    handleAddComment(response);
+  };
+
+  const handleChange = ({
+    target: { name, value },
+  }: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm((prev) => ({ ...prev, [name]: value }));
     if (error) {
       setError((prev) => ({ ...prev, [name]: false }));
     }
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    let isError = false;
+
     const objectKeys = Object.keys(form);
 
     // eslint-disable-next-line no-restricted-syntax
     for (const key of objectKeys) {
       const value = form[key];
 
-      setError((prev) => ({ ...prev, [key]: !value }));
+      // console.log(objectKeys, key, !value);
 
-      // console.log(value)
+      setForm((prev) => ({
+        ...prev,
+        body: defaultValues.body,
+      }));
+
+      if (!value) {
+        isError = true;
+      }
+
+      setError((prev) => ({ ...prev, [key]: !value }));
+    }
+
+    if (!isError) {
+      addComment();
     }
   };
 
@@ -61,7 +96,7 @@ export const NewCommentForm: React.FC = () => {
             name="name"
             id="comment-author-name"
             placeholder="Name Surname"
-            className={`input ${error?.name ? "is-danger" : ""}`}
+            className={`input ${error?.name ? 'is-danger' : ''}`}
           />
 
           <span className="icon is-small is-left">
@@ -70,7 +105,7 @@ export const NewCommentForm: React.FC = () => {
 
           <span
             className={`icon is-small is-right  ${
-              error?.name ? "has-text-danger" : ""
+              error?.name ? 'has-text-danger' : ''
             }`}
             data-cy="ErrorIcon"
           >
@@ -79,7 +114,7 @@ export const NewCommentForm: React.FC = () => {
         </div>
 
         <p className="help is-danger" data-cy="ErrorMessage">
-          {error?.name ? "Name is required" : ""}
+          {error?.name ? 'Name is required' : ''}
         </p>
       </div>
 
@@ -96,7 +131,7 @@ export const NewCommentForm: React.FC = () => {
             onChange={handleChange}
             id="comment-author-email"
             placeholder="email@test.com"
-            className={`input ${error?.email ? "is-danger" : ""}`}
+            className={`input ${error?.email ? 'is-danger' : ''}`}
           />
 
           <span className="icon is-small is-left">
@@ -105,7 +140,7 @@ export const NewCommentForm: React.FC = () => {
 
           <span
             className={`icon is-small is-right ${
-              error?.email ? "has-text-danger" : ""
+              error?.email ? 'has-text-danger' : ''
             }`}
             data-cy="ErrorIcon"
           >
@@ -114,7 +149,7 @@ export const NewCommentForm: React.FC = () => {
         </div>
 
         <p className="help is-danger" data-cy="ErrorMessage">
-          {`${error?.email ? "Email is required" : ""}`}
+          {`${error?.email ? 'Email is required' : ''}`}
         </p>
       </div>
 
@@ -130,29 +165,28 @@ export const NewCommentForm: React.FC = () => {
             id="comment-body"
             name="body"
             placeholder="Type comment here"
-            className={`textarea ${error?.body ? "is-danger" : ""}`}
+            className={`textarea ${error?.body ? 'is-danger' : ''}`}
           />
         </div>
 
         <p className="help is-danger" data-cy="ErrorMessage">
-          {`${error?.body ? "Enter some text" : ""}`}
+          {`${error?.body ? 'Enter some text' : ''}`}
         </p>
       </div>
 
       <div className="field is-grouped">
         <div className="control">
-          <button type="submit" className="button is-link">
-            {/* <button type="submit" className="button is-link is-loading"> */}
+          <button
+            type="submit"
+            className={`button is-link ${isLoading ? 'is-loading' : ''}`}
+          >
             Add
           </button>
         </div>
 
         <div className="control">
           {/* eslint-disable-next-line react/button-has-type */}
-          <button
-            type="reset"
-            className="button is-link is-light"
-          >
+          <button type="reset" className="button is-link is-light">
             Clear
           </button>
         </div>

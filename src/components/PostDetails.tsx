@@ -39,8 +39,13 @@ export const PostDetails: React.FC<IPostDetails> = ({ selectedPost }) => {
   const deleteComment = async (id: number) => {
     await client.delete(`/comments/${id}`);
 
-    setComments((prev) => (prev || [])
-      .filter((currentComment) => currentComment.id !== id));
+    setComments((prev) =>
+      (prev || []).filter((currentComment) => currentComment.id !== id)
+    );
+  };
+
+  const handleAddComment = (comment: Comment) => {
+    setComments((prev) => [...(prev || []), comment]);
   };
 
   return (
@@ -115,7 +120,12 @@ export const PostDetails: React.FC<IPostDetails> = ({ selectedPost }) => {
           </div>
         )}
 
-        {isShownForm && <NewCommentForm />}
+        {isShownForm && (
+          <NewCommentForm
+            handleAddComment={handleAddComment}
+            selectedPost={selectedPost}
+          />
+        )}
       </div>
     </div>
   );
